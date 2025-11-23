@@ -44,6 +44,10 @@ inputs:
     description: Whether or not to fail the workflow if the approval is denied
     required: false
     default: 'true'
+  polling-interval-seconds:
+    description: Number of seconds to wait between polling GitHub API for approval status
+    required: false
+    default: '10'
 outputs:
   issue-number:
     description: The number of the issue created
@@ -53,4 +57,4 @@ outputs:
     description: The status of the approval ("approved" or "denied")
 runs:
   using: docker
-  image: docker://ghcr.io/trstringer/manual-approval:1.11.0
+  image: docker://ghcr.io/trstringer/manual-approval:1.12.0
