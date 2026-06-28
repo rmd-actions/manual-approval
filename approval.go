@@ -11,23 +11,25 @@ import (
 )
 
 type approvalEnvironment struct {
-	client              *github.Client
-	repoFullName        string
-	repo                string
-	repoOwner           string
-	runID               int
-	approvalIssue       *github.Issue
-	approvalIssueNumber int
-	issueTitle          string
-	issueBody           string
-	issueApprovers      []string
-	minimumApprovals    int
-	targetRepoOwner     string
-	targetRepoName      string
-	failOnDenial        bool
+	client                *github.Client
+	repoFullName          string
+	repo                  string
+	repoOwner             string
+	runID                 int
+	approvalIssue         *github.Issue
+	approvalIssueNumber   int
+	issueTitle            string
+	issueBody             string
+	issueLabels           []string
+	issueApprovers        []string
+	minimumApprovals      int
+	targetRepoOwner       string
+	targetRepoName        string
+	failOnDenial          bool
+	closeIssueMeansDenial bool
 }
 
-func newApprovalEnvironment(client *github.Client, repoFullName, repoOwner string, runID int, approvers []string, minimumApprovals int, issueTitle, issueBody string, targetRepoOwner string, targetRepoName string, failOnDenial bool) (*approvalEnvironment, error) {
+func newApprovalEnvironment(client *github.Client, repoFullName, repoOwner string, runID int, approvers []string, minimumApprovals int, issueTitle, issueBody string, targetRepoOwner string, targetRepoName string, failOnDenial bool, closeIssueMeansDenial bool, issueLabels []string) (*approvalEnvironment, error) {
 	repoOwnerAndName := strings.Split(repoFullName, "/")
 	if len(repoOwnerAndName) != 2 {
 		return nil, fmt.Errorf("repo owner and name in unexpected format: %s", repoFullName)
@@ -35,18 +37,20 @@ func newApprovalEnvironment(client *github.Client, repoFullName, repoOwner strin
 	repo := repoOwnerAndName[1]
 
 	return &approvalEnvironment{
-		client:           client,
-		repoFullName:     repoFullName,
-		repo:             repo,
-		repoOwner:        repoOwner,
-		runID:            runID,
-		issueApprovers:   approvers,
-		minimumApprovals: minimumApprovals,
-		issueTitle:       issueTitle,
-		issueBody:        issueBody,
-		targetRepoOwner:  targetRepoOwner,
-		targetRepoName:   targetRepoName,
-		failOnDenial:     failOnDenial,
+		client:                client,
+		repoFullName:          repoFullName,
+		repo:                  repo,
+		repoOwner:             repoOwner,
+		runID:                 runID,
+		issueApprovers:        approvers,
+		minimumApprovals:      minimumApprovals,
+		issueTitle:            issueTitle,
+		issueBody:             issueBody,
+		targetRepoOwner:       targetRepoOwner,
+		targetRepoName:        targetRepoName,
+		failOnDenial:          failOnDenial,
+		closeIssueMeansDenial: closeIssueMeansDenial,
+		issueLabels:           issueLabels,
 	}, nil
 }
 
@@ -110,6 +114,7 @@ func (a *approvalEnvironment) createApprovalIssue(ctx context.Context) error {
 			Title:     &issueTitle,
 			Body:      &issueBody,
 			Assignees: &a.issueApprovers,
+			Labels:    &a.issueLabels,
 		},
 	)
 	if err != nil {
@@ -150,9 +155,9 @@ func (a *approvalEnvironment) SetActionOutputs(outputs map[string]string) (bool,
 		return false, err
 	}
 
-    defer func() {
-        _ = f.Close() // Error explicitly ignored as there is nothing to handle if file close fails.
-    }()
+	defer func() {
+		_ = f.Close() // Error explicitly ignored as there is nothing to handle if file close fails.
+	}()
 
 	var pairs []string
 
@@ -308,10 +313,10 @@ func splitLongString(input string) []string {
 	currentLength := 0
 
 	for i, line := range lines {
-    lineLength := len(line)
+		lineLength := len(line)
 		if i < len(lines)-1 {
 			lineLength++
-    }
+		}
 
 		if currentLength+lineLength > maxLength {
 			if currentChunk.Len() > 0 {
@@ -344,4 +349,3 @@ func splitLongString(input string) []string {
 	}
 	return result
 }
-
