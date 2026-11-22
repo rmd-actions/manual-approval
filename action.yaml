@@ -57,6 +57,12 @@ inputs:
       comment will be treated as a denial. Disabled by default.
     required: false
     default: "false"
+  allow-comment-reasons:
+    description: >
+      If true, the first line must contain only the approval or denial keyword
+      with optional punctuation. An explanation can follow on later lines.
+    required: false
+    default: "false"
 outputs:
   issue-number:
     description: The number of the issue created
@@ -64,6 +70,8 @@ outputs:
     description: The URL of the issue created
   approval-status:
     description: The status of the approval ("approved" or "denied")
+  approval-comment:
+    description: The comment that met the approval threshold, or empty if unavailable or over 64 KiB
 runs:
   using: docker
   image: docker://ghcr.io/trstringer/manual-approval:1.13.0
